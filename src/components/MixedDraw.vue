@@ -96,8 +96,7 @@ export default {
             drawCharacters,
             markNotOwned,
             restoreCharacter,
-            goBack,
-            excludedCharacters: props.excludedCharacters,
+            goBack
         };
     },
 };

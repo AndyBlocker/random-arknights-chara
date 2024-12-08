@@ -1,10 +1,11 @@
 <template>
     <div class="excluded-characters">
-        <h2>未拥有的角色：(已知bug:需要刷新页面才会渲染新的内容，信息正常记录不会Roll错！)</h2>
+        <h2>未拥有的角色：</h2>
         <div class="small-grid" :style="gridStyle">
-            <div v-for="(char, index) in excludedCharacters" :key="char.name" class="small-card" :style="cardStyle">
+            <div v-for="(char, index) in excludedCharacters" :key="char.index" class="small-card" :style="cardStyle">
                 <div class="small-card-container" :style="containerStyle">
-                    <img :src="char.avatar" :alt="char.name" class="small-image" :style="imageStyle" />
+                    <CharcterAvatar class="small-grid" :profession="char.职业" :rarity="char.rarity" :elite="char.elite"
+                        :name="char.name" />
                     <div class="restore-overlay">
                         <el-button class="restore-button" type="success" icon="Check" @click="restoreCharacter(index)"
                             :style="buttonStyle">
@@ -19,7 +20,7 @@
 
 <script>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
-
+import CharcterAvatar from './CharcterAvatar.vue';
 export default {
     props: {
         excludedCharacters: {
@@ -27,17 +28,17 @@ export default {
             default: () => [],
         },
     },
+    components: {
+        CharcterAvatar
+    },
     emits: ["restore-character"],
     setup(props, { emit }) {
         const gridStyle = ref("");
         const cardStyle = ref("");
         const containerStyle = ref("");
-        const imageStyle = ref("");
         const buttonStyle = ref("");
 
-        watch(() => [...props.excludedCharacters], (newValue) => {
-            console.log(newValue);
-        }, { deep: true, immediate: true });
+        watch(() => props.excludedCharacters, (newValue) => {}, { deep: true, immediate: true });
 
         const updateGridLayout = () => {
             const containerWidth = window.innerWidth;
@@ -71,11 +72,6 @@ export default {
           height: ${adjustedCardWidth}px;
           position: relative;
         `;
-            imageStyle.value = `
-          max-width: 100%;
-          height: auto;
-          object-fit: contain;
-        `;
             buttonStyle.value = `
           font-size: ${Math.max(8, adjustedCardWidth * 0.1)}px;
           padding: ${Math.max(2, adjustedCardWidth * 0.05)}px ${Math.max(4, adjustedCardWidth * 0.1)}px;
@@ -100,7 +96,6 @@ export default {
             gridStyle,
             cardStyle,
             containerStyle,
-            imageStyle,
             buttonStyle,
             restoreCharacter,
         };
@@ -110,6 +105,7 @@ export default {
 
 <style scoped>
 .excluded-characters {
+    padding: 20px;
     margin-top: 32px;
 }
 

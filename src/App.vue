@@ -8,7 +8,7 @@
 <script>
 import { ref, onMounted } from 'vue';
 import Cookies from 'js-cookie';
-import { characters as allCharacters } from "@/assets/operator_data.js";
+import allCharacters from "@/assets/operator_data.json";
 
 export default {
   name: 'App',
@@ -21,10 +21,7 @@ export default {
         name: item.干员,
         ...item,
         rarity: Number(item.稀有度),
-        image: `/random-arknights-chara/img/半身像_${item.干员}_2.png`,
-        avatar: Number(item.稀有度) >= 3
-          ? `/random-arknights-chara/img/头像_${item.干员}_2.png`
-          : `/random-arknights-chara/img/头像_${item.干员}.png`,
+        elite: Number(item.稀有度) >= 3 ? 2 : 1,
       }));
     };
 

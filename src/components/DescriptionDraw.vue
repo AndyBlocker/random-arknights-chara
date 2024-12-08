@@ -6,7 +6,7 @@
         <p class="description">{{ currentDescription }}</p>
         <el-button type="primary" @click="drawCharacters">抽取参考干员</el-button>
         <CharacterGrid v-if="drawnCharacters.length > 0" :characters="drawnCharacters" @mark-not-owned="markNotOwned" />
-        <ExcludedCharacters :characters="excludedCharacters" @restore-character="restoreCharacter" />
+        <ExcludedCharacters :excluded-characters="excludedCharacters" @restore-character="restoreCharacter" />
     </div>
 </template>
 
@@ -32,24 +32,22 @@ export default {
         const currentDescription = ref('');
         const drawnCharacters = ref([]);
 
-        const fields = ['职业', '标志', '出身地', '种族', '阻挡数', '攻击速度', '性别', '位置', '标签', '获得方式', '物理强度', '战场机动', '生理耐受', '战术规划', '战术技巧', '国家'];
+        const fields = ['职业', '标志', '出身地', '种族', '阻挡数', '攻击速度', '性别', '位置', '标签', '获得方式', '物理强度', '战场机动', '生理耐受', '战术规划', '战斗技巧', '国家'];
 
+        const fieldValueMap = fields.map(field => {
+            let values = [...new Set(props.characters.map(character => character[field]))];
+            values = values.filter(value => value !== null && value !== undefined)
+            return {field, values}
+        })
         const goBack = () => {
             router.push('/');
         };
 
         const generateDescription = () => {
-            const selectedFields = [];
-            while (selectedFields.length < 3) {
-                const field = fields[Math.floor(Math.random() * fields.length)];
-                if (!selectedFields.includes(field)) {
-                    selectedFields.push(field);
-                }
-            }
-
-            currentDescription.value = selectedFields.map(field => {
-                const value = props.characters[Math.floor(Math.random() * props.characters.length)][field];
-                return `${field}为${value}`;
+            const randomFields = fieldValueMap.sort(() => 0.5 - Math.random()).slice(0, 3);
+            currentDescription.value = randomFields.map(obj => {
+                const randomValue = obj.values[Math.floor(Math.random() * obj.values.length)];
+                return `${obj.field}为${randomValue}`;
             }).join('，');
         };
 
@@ -108,8 +106,7 @@ export default {
             drawCharacters,
             markNotOwned,
             restoreCharacter,
-            goBack,
-            excludedCharacters: props.excludedCharacters,
+            goBack
         };
     },
 };

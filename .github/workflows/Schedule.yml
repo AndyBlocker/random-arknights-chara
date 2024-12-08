@@ -1,0 +1,30 @@
+name: Scheduled Python Worker
+
+on:
+  schedule:
+    - cron: '0 20 * * *'  # 每天 UTC 时间 00:00 运行
+  workflow_dispatch:  # 添加手动触发器
+
+jobs:
+  run-worker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python environment
+        uses: ./.github/actions/setup-python
+
+      - name: Install prerequisites
+        run: pip install requests
+
+      - name: Run Python Script
+        run: python script/get_json_from_prts.py
+        
+      - name: Commit and Push
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email github-actions[bot]@users.noreply.github.com
+          git add .
+          git diff-index --quiet HEAD || git commit -m "chore: update operator_data.json"
+          git push

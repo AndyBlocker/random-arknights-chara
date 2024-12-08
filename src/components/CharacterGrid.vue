@@ -1,8 +1,7 @@
 <template>
     <div class="character-grid" :style="gridStyle">
-        <div class="character-card" v-for="char in characters" :key="char.name" :style="cardStyle">
-            <img :src="char.image" :alt="char.name" class="character-image" :style="imageStyle" />
-            <div class="character-name">{{ char.name }}</div>
+        <div class="character-cards" v-for="char in characters" :key="char.name" :style="cardStyle">
+            <CharacterHalfPic :profession="char.职业" :rarity="char.rarity" :elite="char.elite" :logo="char.标志" :zh="char.name"/>
             <div class="overlay">
                 <el-button class="not-owned-button" type="danger" icon="Close" @click="markNotOwned(char.name)"
                     :style="buttonStyle">
@@ -15,10 +14,13 @@
 
 <script>
 import { ref, onMounted, onUnmounted } from 'vue';
-
+import CharacterHalfPic from './CharacterHalfPic.vue';
 export default {
     props: {
         characters: Array,
+    },
+    components: {
+        CharacterHalfPic
     },
     emits: ['mark-not-owned'],
     setup(props, { emit }) {
@@ -104,7 +106,7 @@ export default {
     margin: 24px auto;
 }
 
-.character-card {
+.character-cards {
     position: relative;
     text-align: center;
 }
@@ -129,7 +131,7 @@ export default {
     transition: opacity 0.3s ease;
 }
 
-.character-card:hover .overlay {
+.character-cards:hover .overlay {
     opacity: 1;
 }
 

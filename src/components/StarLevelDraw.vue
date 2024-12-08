@@ -7,7 +7,7 @@
             <h3>{{ `★${rarity + 1}` }}</h3>
             <CharacterGrid :characters="drawnCharacters[rarity]" @mark-not-owned="markNotOwned" />
         </div>
-        <ExcludedCharacters v-model:characters="excludedCharacters" @restore-character="restoreCharacter" />
+        <ExcludedCharacters :excluded-characters="excludedCharacters" @restore-character="restoreCharacter" />
     </div>
 </template>
 
@@ -95,8 +95,7 @@ export default {
             drawCharacters,
             markNotOwned,
             restoreCharacter,
-            goBack,
-            excludedCharacters: props.excludedCharacters,
+            goBack
         };
     },
 };
