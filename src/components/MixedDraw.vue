@@ -68,12 +68,15 @@ export default {
                 emit('update:excludedCharacters', newExcludedCharacters);
                 const indexToReplace = drawnCharacters.value.findIndex(c => c.name === name);
                 if (indexToReplace !== -1) {
-                    const replacementChar = availableCharacters.value.find(c =>
+                    const replacementCandidates = availableCharacters.value.filter(c =>
                         !drawnCharacters.value.includes(c) &&
                         c.name !== name &&
                         !newExcludedCharacters.some(ec => ec.name === c.name)
                     );
-                    if (replacementChar) {
+
+                    if (replacementCandidates.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * replacementCandidates.length);
+                        const replacementChar = replacementCandidates[randomIndex];
                         drawnCharacters.value[indexToReplace] = replacementChar;
                     } else {
                         drawnCharacters.value.splice(indexToReplace, 1);
@@ -82,6 +85,7 @@ export default {
                 }
             }
         };
+
 
         const restoreCharacter = (index) => {
             const newExcludedCharacters = [...props.excludedCharacters];
@@ -107,7 +111,7 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    /* padding: 20px; */
 }
 
 .back-button {

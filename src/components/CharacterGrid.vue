@@ -1,20 +1,25 @@
 <template>
-    <div class="character-grid" :style="gridStyle">
-        <div class="character-cards" v-for="char in characters" :key="char.name" :style="cardStyle">
-            <CharacterHalfPic :profession="char.职业" :rarity="char.rarity" :elite="char.elite" :logo="char.标志" :zh="char.name"/>
-            <div class="overlay">
-                <el-button class="not-owned-button" type="danger" icon="Close" @click="markNotOwned(char.name)"
-                    :style="buttonStyle">
-                    未拥有
-                </el-button>
+    <div class="character-grid-container">
+        <div class="character-grid" :style="gridStyle">
+            <div v-for="char in characters" :key="char.name" class="character-cell">
+                <div class="character-card" :style="cardStyle">
+                    <CharacterHalfPic :profession="char.职业" :rarity="char.rarity" :elite="char.elite" :logo="char.标志"
+                        :zh="char.name" :scale="cardScale" />
+                    <div class="overlay" :style="overlayStyle" @click="markNotOwned(char.name)">
+                        <el-button class="not-owned-button" type="danger" icon="Close" :style="buttonStyle">
+                            未拥有
+                        </el-button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <script>
-import { ref, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import CharacterHalfPic from './CharacterHalfPic.vue';
+
 export default {
     props: {
         characters: Array,
@@ -24,71 +29,74 @@ export default {
     },
     emits: ['mark-not-owned'],
     setup(props, { emit }) {
-        const gridStyle = ref("");
-        const cardStyle = ref("");
-        const imageStyle = ref("");
-        const buttonStyle = ref("");
+        const windowWidth = ref(window.innerWidth);
 
-        const updateGridLayout = () => {
-            const containerWidth = window.innerWidth;
-            const maxColumns = 12;
-            const gap = 12;
-            const maxImageWidth = 180;
-            const minImageWidth = 50;
-
-            const availableWidth = containerWidth - gap * (maxColumns - 1);
-            let columns = Math.floor(availableWidth / maxImageWidth);
-
-            if (columns >= 6) columns = 6;
-            else if (columns >= 4 && columns < 6) columns = 4;
-            else if (columns < 4) columns = 4;
-
-            const imageWidth = Math.min(
-                maxImageWidth,
-                (availableWidth - gap * (columns - 1)) / columns
-            );
-            const adjustedImageWidth = Math.max(minImageWidth, imageWidth);
-
-            gridStyle.value = `
-          display: grid;
-          grid-template-columns: repeat(${columns}, ${adjustedImageWidth}px);
-          gap: ${gap}px;
-          justify-content: center;
-        `;
-            cardStyle.value = `
-          width: ${adjustedImageWidth}px;
-          height: auto;
-          text-align: center;
-        `;
-            imageStyle.value = `
-          max-width: 100%;
-          height: auto;
-          object-fit: contain;
-        `;
-            buttonStyle.value = `
-          font-size: ${Math.max(8, adjustedImageWidth * 0.1)}px;
-          padding: ${Math.max(2, adjustedImageWidth * 0.05)}px ${Math.max(4, adjustedImageWidth * 0.1)}px;
-          border-radius: ${Math.max(2, adjustedImageWidth * 0.02)}px;
-        `;
+        const updateWindowWidth = () => {
+            windowWidth.value = window.innerWidth;
         };
+
+        onMounted(() => {
+            window.addEventListener('resize', updateWindowWidth);
+        });
+
+        onUnmounted(() => {
+            window.removeEventListener('resize', updateWindowWidth);
+        });
+
+        const columns = computed(() => {
+            if (windowWidth.value >= 750) return 6;
+            if (windowWidth.value >= 510) return 4;
+            return 3;
+        });
+
+        const cardScale = computed(() => {
+            const baseWidth = 120; // Original width of CharacterHalfPic
+            const availableWidth = (windowWidth.value / columns.value) - 8; // Accounting for gap
+            return Math.min(1, availableWidth / baseWidth);
+        });
+
+        const gridStyle = computed(() => {
+            const gap = 4;
+            return `
+          display: grid;
+          grid-template-columns: repeat(${columns.value}, 1fr);
+          gap: ${gap}px;
+          width: 100%;
+          box-sizing: border-box;
+        `;
+        });
+
+        const cardStyle = computed(() => {
+            const width = 120 * cardScale.value;
+            const height = 250 * cardScale.value;
+            return `
+          width: ${width}px;
+          height: ${height}px;
+        `;
+        });
+
+        const overlayStyle = computed(() => `
+        width: 100%;
+        height: 100%;
+      `);
+
+        const buttonStyle = computed(() => {
+            const baseFontSize = windowWidth.value < 576 ? 10 : 12;
+            return `
+          font-size: ${baseFontSize}px;
+          padding: ${baseFontSize / 2}px ${baseFontSize}px;
+        `;
+        });
 
         const markNotOwned = (name) => {
             emit("mark-not-owned", name);
         };
 
-        onMounted(() => {
-            updateGridLayout();
-            window.addEventListener("resize", updateGridLayout);
-        });
-
-        onUnmounted(() => {
-            window.removeEventListener("resize", updateGridLayout);
-        });
-
         return {
             gridStyle,
             cardStyle,
-            imageStyle,
+            cardScale,
+            overlayStyle,
             buttonStyle,
             markNotOwned,
         };
@@ -97,41 +105,46 @@ export default {
 </script>
 
 <style scoped>
+.character-grid-container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
 .character-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-    grid-template-rows: repeat(2, minmax(120px, auto));
-    gap: 16px;
+    margin: 0 auto;
+    max-width: 1440px;
+}
+
+.character-cell {
+    display: flex;
     justify-content: center;
-    margin: 24px auto;
+    align-items: center;
 }
 
-.character-cards {
+.character-card {
     position: relative;
-    text-align: center;
-}
-
-.character-image {
-    max-width: 100%;
-    height: auto;
-    object-fit: contain;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
 }
 
 .overlay {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
     background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
     transition: opacity 0.3s ease;
 }
 
-.character-cards:hover .overlay {
+.character-card:hover .overlay,
+.character-card:active .overlay {
     opacity: 1;
 }
 
@@ -142,11 +155,14 @@ export default {
     cursor: pointer;
 }
 
-.character-name {
-    margin-top: 8px;
-    font-size: 14px;
-    text-align: center;
-    color: #333;
-    font-weight: bold;
+@media (hover: none) {
+    .overlay {
+        opacity: 1;
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .not-owned-button {
+        opacity: 0.8;
+    }
 }
 </style>

@@ -37,19 +37,44 @@ export default {
         const fieldValueMap = fields.map(field => {
             let values = [...new Set(props.characters.map(character => character[field]))];
             values = values.filter(value => value !== null && value !== undefined)
-            return {field, values}
+            return { field, values }
         })
         const goBack = () => {
             router.push('/');
         };
 
         const generateDescription = () => {
-            const randomFields = fieldValueMap.sort(() => 0.5 - Math.random()).slice(0, 3);
-            currentDescription.value = randomFields.map(obj => {
-                const randomValue = obj.values[Math.floor(Math.random() * obj.values.length)];
-                return `${obj.field}为${randomValue}`;
-            }).join('，');
+            let validDescription = false;
+            let attempts = 0;
+            const maxAttempts = 100; // 设置最大尝试次数，防止无限循环
+
+            while (!validDescription && attempts < maxAttempts) {
+                attempts++;
+                const randomFields = fieldValueMap.sort(() => 0.5 - Math.random()).slice(0, 3);
+                const description = randomFields.map(obj => {
+                    const randomValue = obj.values[Math.floor(Math.random() * obj.values.length)];
+                    return `${obj.field}为${randomValue}`;
+                }).join('，');
+
+                // 检查是否至少有3个角色符合描述
+                const matchingCharacters = props.characters.filter(char =>
+                    randomFields.every(field =>
+                        char[field.field] === randomFields.find(f => f.field === field.field).values.find(v => description.includes(`${field.field}为${v}`))
+                    )
+                );
+
+                if (matchingCharacters.length >= 3) {
+                    currentDescription.value = description;
+                    validDescription = true;
+                }
+            }
+
+            if (!validDescription) {
+                ElMessage.warning('无法生成匹配至少3个角色的描述，请重试');
+                currentDescription.value = '';
+            }
         };
+
 
         const availableCharacters = computed(() => {
             if (!currentDescription.value) return [];
@@ -64,11 +89,17 @@ export default {
         });
 
         const drawCharacters = () => {
-            if (availableCharacters.value.length === 0) {
-                ElMessage.warning('没有符合条件的角色，请重新生成描述');
+            if (availableCharacters.value.length < 3) {
+                ElMessage.warning('符合条件的角色不足3个，请重新生成描述');
                 return;
             }
-            drawnCharacters.value = availableCharacters.value.slice(0, Math.min(12, availableCharacters.value.length));
+            drawnCharacters.value = [];
+            const tempAvailable = [...availableCharacters.value];
+            while (drawnCharacters.value.length < Math.min(12, tempAvailable.length)) {
+                const randomIndex = Math.floor(Math.random() * tempAvailable.length);
+                const char = tempAvailable.splice(randomIndex, 1)[0];
+                drawnCharacters.value.push(char);
+            }
         };
 
         const markNotOwned = (name) => {
@@ -78,12 +109,15 @@ export default {
                 emit('update:excludedCharacters', newExcludedCharacters);
                 const indexToReplace = drawnCharacters.value.findIndex(c => c.name === name);
                 if (indexToReplace !== -1) {
-                    const replacementChar = availableCharacters.value.find(c =>
+                    const replacementCandidates = availableCharacters.value.filter(c =>
                         !drawnCharacters.value.includes(c) &&
                         c.name !== name &&
                         !newExcludedCharacters.some(ec => ec.name === c.name)
                     );
-                    if (replacementChar) {
+
+                    if (replacementCandidates.length > 0) {
+                        const randomIndex = Math.floor(Math.random() * replacementCandidates.length);
+                        const replacementChar = replacementCandidates[randomIndex];
                         drawnCharacters.value[indexToReplace] = replacementChar;
                     } else {
                         drawnCharacters.value.splice(indexToReplace, 1);
@@ -92,6 +126,7 @@ export default {
                 }
             }
         };
+
 
         const restoreCharacter = (index) => {
             const newExcludedCharacters = [...props.excludedCharacters];
@@ -117,7 +152,7 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    /* padding: 20px; */
 }
 
 .back-button {

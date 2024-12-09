@@ -69,12 +69,17 @@ export default {
                 const rarity = char.rarity;
                 const indexToReplace = drawnCharacters.value[rarity].findIndex(c => c.name === name);
                 if (indexToReplace !== -1) {
-                    const replacementChar = availableCharacters.value[rarity].find(c =>
+                    // 获取所有可用于替换的角色
+                    const replacementCandidates = availableCharacters.value[rarity].filter(c =>
                         !drawnCharacters.value[rarity].includes(c) &&
                         c.name !== name &&
                         !newExcludedCharacters.some(ec => ec.name === c.name)
                     );
-                    if (replacementChar) {
+
+                    if (replacementCandidates.length > 0) {
+                        // 随机选择一个替换角色
+                        const randomIndex = Math.floor(Math.random() * replacementCandidates.length);
+                        const replacementChar = replacementCandidates[randomIndex];
                         drawnCharacters.value[rarity][indexToReplace] = replacementChar;
                     } else {
                         drawnCharacters.value[rarity].splice(indexToReplace, 1);
@@ -83,6 +88,7 @@ export default {
                 }
             }
         };
+
 
         const restoreCharacter = (index) => {
             const newExcludedCharacters = [...props.excludedCharacters];
@@ -106,7 +112,7 @@ export default {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 20px;
+    /* padding: 20px; */
 }
 
 .back-button {
