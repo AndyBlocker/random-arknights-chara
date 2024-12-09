@@ -155,7 +155,7 @@ export default {
     cursor: pointer;
 }
 
-@media (hover: none) {
+/* @media (hover: none) {
     .overlay {
         opacity: 1;
         background: rgba(0, 0, 0, 0.3);
@@ -164,5 +164,5 @@ export default {
     .not-owned-button {
         opacity: 0.8;
     }
-}
+} */
 </style>
